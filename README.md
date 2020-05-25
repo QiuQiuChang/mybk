@@ -1,19 +1,19 @@
-# mybk
-
-## Project setup
+#  下载安装Player
+git clone https://github.com/QiuQiuChang/mybk.git
 ```
+```
+#  进入 Player 播放器目录
+cd mybk
+```
+```
+### # 安装依赖
 npm install
 ```
-
-### Compiles and hot-reloads for development
 ```
+#### 本地运行 Player
 npm run serve
 ```
-
-### Compiles and minifies for production
 ```
+#### 项目打包（）
 npm run build
 ```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
