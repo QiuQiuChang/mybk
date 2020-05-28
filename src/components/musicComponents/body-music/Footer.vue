@@ -19,12 +19,12 @@
             </div>
             <mmProgress :percent="percentage" @percentChange="percentChange"></mmProgress>
           </div>
-          <i class="iconfont icon-shunxubofangtubiao"></i>
+          <i class="iconfont icon-shunxubofangtubiao" :title="playModel" @click="changeModel" ref="playModel"></i>
           <i class="iconfont icon-weibiaoti-"></i>
           <div class="music-bar-volume" title="音量加减">
             <div class="volume">
               <i class="iconfont icon-yinliang" @click="changeMute" ref="iconVolume"></i>
-              <mmProgress class="volume-bar" @percentChange='changeVolume' :percent='volume'></mmProgress>
+              <mmProgress class="volume-bar" @percentChange="changeVolume" :percent="volume"></mmProgress>
             </div>
           </div>
         </div>
@@ -38,7 +38,6 @@
 <script>
 import mmProgress from "../progress/mmProgress";
 import { mapState, mapGetters, mapMutations } from "vuex";
-import { EventBus } from '../../../eventBus/eventBus'
 export default {
   name: "footerWrap",
   components: {
@@ -47,33 +46,31 @@ export default {
   data() {
     return {
       musicName: "", //存歌曲名
-      picUrl:'',
+      picUrl: "",
       fullTime: "", //转化后的歌曲总时间
       duration: "", //总时间
       musicArtist: "", //歌手
       nowTime: "00:00", //转化后当前时间
       percentage: 0, //比率
-      volume:0,  //音频播放时的音量
-      volume1:0,//静音之前的音量大小
+      volume: 0, //音频播放时的音量
+      volume1: 0, //静音之前的音量大小
       timer: 0, //定时器
       timer1: 0,
-      num:'',
-      // arr:[]
+      index: "", //存放播放的歌曲下标值
+      musicId: "" ,//歌曲id用于暂停按钮的提交
+      playModel:'顺序播放',
+      // {'顺序播放':order,'随机播放':random,'列表循环':cycle,'单曲循环':singleCycle}
     };
   },
   created() {},
   mounted() {
     let musicBar = document.getElementsByClassName("music-bar")[0];
     musicBar.classList.add("disabled");
-    EventBus.$on('changeNum',(value)=>{
-      this.num = value
-      console.log(value)
-    })
   },
   methods: {
     play() {
       let audio = this.$refs["setAduio"];
-          this.volume = audio.volume
+      this.volume = audio.volume;
       let musicBar = document.getElementsByClassName("music-bar")[0];
       let iconPlay = this.$refs["iconPlay"];
       iconPlay.classList.replace("icon-play", "icon-pause");
@@ -101,11 +98,7 @@ export default {
                 s = "0" + s;
               }
               this.nowTime = "0" + m + ":" + s;
-              if (
-                nowTime == this.duration ||
-                this.nowTime == this.fullTime ||
-                this.barMenu
-              ) {
+              if (nowTime == this.duration || this.nowTime == this.fullTime) {
                 clearInterval(this.timer);
               }
             }, 1000);
@@ -123,64 +116,66 @@ export default {
       let iconPlay = this.$refs["iconPlay"];
       iconPlay.classList.replace("icon-pause", "icon-play");
       audio.pause();
+      clearInterval(this.timer);
     },
-    menuControl() {
-      // let audio = this.$refs["setAduio"];
-      // audio.paused ? this.play() : this.pause();
-      this.commitMenu();
-      this.commitBarMenu();
+    menuControl() {//播放暂停
+      this.commitNum({ id: this.musicId });
     },
-    prve(){
-      this.commitPrve();
+    prve() {//上一首
+      let value = this.musicArr.length - 1;
+      this.index = this.index == 0 ? value : this.index - 1;
+      let id = this.musicArr.slice(this.index, this.index + 1)[0].id;
+      this.commitNum({ id });
     },
-    next(){
-      this.num = this.num == (this.musicArr.length - 1)? 0 : this.num + 1
-      this.commitNum(this.num);
+    next() {//下一首
+      let value = this.musicArr.length - 1;
+      this.index = this.index == value ? 0 : this.index + 1;
+      let id = this.musicArr.slice(this.index, this.index + 1)[0].id;
+      this.commitNum({ id });
     },
-    ended() { 
+    ended() {
       this.percentage = 0;
-      this.nowTime = "00:00"
-      this.commitNext();
+      this.nowTime = "00:00";
+      this.next();
     },
-    percentChange(value){
+    percentChange(value) {
       let audio = this.$refs["setAduio"];
-      audio.currentTime = audio.duration*value
+      audio.currentTime = audio.duration * value;
     },
-    changeVolume(percent){
+    changeVolume(percent) {
       let audio = this.$refs["setAduio"];
-      let iconVolume = this.$refs['iconVolume']
-      let jingyin = iconVolume.classList.contains('icon-jingyin')
-      let yinliang = iconVolume.classList.contains('icon-yinliang')
-      if(jingyin){
-        iconVolume.classList.replace('icon-jingyin','icon-yinliang')
+      let iconVolume = this.$refs["iconVolume"];
+      let jingyin = iconVolume.classList.contains("icon-jingyin");
+      let yinliang = iconVolume.classList.contains("icon-yinliang");
+      if (jingyin) {
+        iconVolume.classList.replace("icon-jingyin", "icon-yinliang");
       }
-      if(yinliang && percent == 0){
-        iconVolume.classList.replace('icon-yinliang','icon-jingyin')
+      if (yinliang && percent == 0) {
+        iconVolume.classList.replace("icon-yinliang", "icon-jingyin");
       }
-      audio.volume = percent
-      this.volume = percent
+      audio.volume = percent;
+      this.volume = percent;
     },
-    changeMute(){
+    changeMute() {
       let audio = this.$refs["setAduio"];
-      let iconVolume = this.$refs['iconVolume']
-      let yinliang = iconVolume.classList.contains('icon-yinliang')
-      let jingyin = iconVolume.classList.contains('icon-jingyin')
-      if(yinliang){
-        this.volume1 = audio.volume
-        iconVolume.classList.replace('icon-yinliang','icon-jingyin')
-        audio.volume = 0
-        this.volume = audio.volume
+      let iconVolume = this.$refs["iconVolume"];
+      let name = iconVolume.className;
+      if (/icon-yinliang/.test(name)) {
+        this.volume1 = audio.volume;
+        iconVolume.classList.replace("icon-yinliang", "icon-jingyin");
+        audio.volume = 0;
+        this.volume = audio.volume;
       }
-      if(jingyin){
-        iconVolume.classList.replace('icon-jingyin','icon-yinliang')
-        audio.volume = this.volume1
-        this.volume = this.volume1
+      if (/icon-jingyin/.test(name)) {
+        iconVolume.classList.replace("icon-jingyin", "icon-yinliang");
+        audio.volume = this.volume1;
+        this.volume = this.volume1;
       }
     },
-    workingData(value){
+    workingData(value) {//vuex中取出数据解析函数
       this.musicName = this.musicArr[value].name;
       this.musicArtist = this.musicArr[value].ar;
-      this.picUrl = this.musicArr[value].al.picUrl
+      this.picUrl = this.musicArr[value].al.picUrl;
       let time = this.musicArr[value].dt;
       let m =
         parseInt(Math.floor(time / 1000) / 60) < 10
@@ -193,59 +188,33 @@ export default {
       let str = m + ":" + s;
       this.fullTime = str;
     },
-    ...mapMutations(["commitNext", "commitMenu", "commitNum","commitPrve","commitBarMenu"])
+    changeModel(){
+      let playModel = this.$refs['playModel']
+      console.log(playModel.className)
+    },
+    ...mapMutations(["commitNum"])
   },
   watch: {
-    num(now, old) {
-      this.workingData(this.num)
+    playNum(now, old) {
       let audio = this.$refs["setAduio"];
-      audio.src = this.musicArr[this.num].url;
-      audio.paused ? this.play() : this.pause();
-      this.$emit('changePic',this.picUrl)
-    },
-    musicArr(now,old){
-      console.log(now,now==old)
-    //   this.musicName = now[this.num].name;
-    //   this.musicArtist = now[this.num].ar;
-    //   this.picUrl = now[this.num].al.picUrl
-    //   let time = now[this.num].dt;
-    //   let m =
-    //     parseInt(Math.floor(time / 1000) / 60) < 10
-    //       ? "0" + parseInt(Math.floor(time / 1000) / 60)
-    //       : parseInt(Math.floor(time / 1000) / 60);
-    //   let s =
-    //     Math.floor(time / 1000) % 60 < 10
-    //       ? "0" + (Math.floor(time / 1000) % 60)
-    //       : Math.floor(time / 1000) % 60;
-    //   let str = m + ":" + s;
-    //   this.fullTime = str;
-    //   let audio = this.$refs["setAduio"];
-    //   audio.src = now[this.num].url;
-    //   audio.paused ? this.play() : this.pause();
-    //  this.workingData(this.num)
-    //   let audio = this.$refs["setAduio"];
-    //   audio.src = this.musicArr[this.num].url;
-    //   audio.paused ? this.play() : this.pause();
-    //   this.$emit('changePic',this.picUrl)
-    },
-    // playNum(now,old){
-    //   console.log(now)
-    //     this.workingData(now)
-    //   let audio = this.$refs["setAduio"];
-    //   audio.src = this.musicArr[now].url;
-    //   audio.paused ? this.play() : this.pause();
-    //   this.$emit('changePic',this.picUrl)
-    // },
-    playMenu(now, old) {
-      let audio = this.$refs["setAduio"];
+      const { id } = now;
+      if (old.id !== id) {
+        let arrItem = this.musicArr.find(item => {
+          return item.id == id;
+        });
+        let num = this.musicArr.indexOf(arrItem);
+        this.index = num;
+        this.workingData(num);
+        audio.src = this.musicArr[num].url;
+        this.percentage = 0;
+        this.musicId = id;
+        this.$emit("changePic", this.picUrl);
+      }
       audio.paused ? this.play() : this.pause();
     }
-    // arr(now,old){
-    //     console.log(1)
-    // }
   },
   computed: {
-    ...mapGetters(["musicArr", "playNum", "playMenu","barMenu"])
+    ...mapGetters(["musicArr", "playNum"])
   }
 };
 </script>
@@ -299,7 +268,7 @@ audio {
           height: 22px;
           line-height: 22px;
         }
-        .icon-pause{
+        .icon-pause {
           font-size: 26px;
         }
       }
@@ -387,7 +356,8 @@ audio {
         width: 150px;
         height: 100%;
         align-items: center;
-        .icon-yinliang,.icon-jingyin{
+        .icon-yinliang,
+        .icon-jingyin {
           width: 25px;
           height: 25px;
           line-height: 25px;
@@ -430,8 +400,8 @@ audio {
         //     }
         //   }
         // }
-        .volume-bar{
-          flex:1;
+        .volume-bar {
+          flex: 1;
         }
       }
     }

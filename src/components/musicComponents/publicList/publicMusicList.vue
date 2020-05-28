@@ -1,17 +1,17 @@
 <template>
-  <div class="publicMusicList" ref="myScrollbar" v-show="isTrue">
-    <div class="list-content">
-      <div
-        v-for="(item,index) in musicList"
-        :key="item.id"
-        class="list-item"
-        ref="list-item"
-      >
+  <div class="publicMusicList" v-show="isTrue">
+    <div class="list-title">
+      <span class="list-name">歌曲</span>
+      <span class="list-artist">歌手</span>
+      <span class="list-time">时长</span>
+    </div>
+    <div class="list-content" ref="myScrollbar">
+      <div v-for="(item,index) in musicList" :key="item.id" class="list-item" ref="list-item">
         <span class="list-num">{{index+1}}</span>
         <div class="list-name">
           <span>{{item.name}}</span>
           <div class="list-menu">
-            <i class="iconfont hover icon-bofang" @click.stop="play(index)" ref="changeClass"></i>
+            <i class="iconfont hover icon-bofang" @click.stop="play(item.id)" ref="changeClass"></i>
           </div>
         </div>
         <span class="list-artist">{{item.ar}}</span>
@@ -20,51 +20,43 @@
           <i></i>
         </span>
       </div>
-    </div>
-    <div class="loading" v-show="show">
-      <span>{{loadingText}}</span>
+      <div class="loading" v-show="show">
+        <span @click="deleteList">{{loadingText}}</span>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import { mapMutations, mapGetters } from "vuex";
-import { filterData }  from '../../../utils/util'
 export default {
   name: "publicMusicList",
-  props:['originalData'],
+  props: ["musicList"],
   data() {
     return {
-      musicList: [],
       show: false,
-      isTrue:false,
-      data:[],
-      count:'',
-      barMenu:false,
-      loadingText: "加载更多...",
-    }; 
+      isTrue: false,
+      commitTrue:false,
+      timer: 0,
+      loadingText: "清空列表"
+    };
+  },
+  mounted() {
+    let ele = this.$refs["myScrollbar"];
+    ele.addEventListener("scroll", this.handleScroll);
   },
   methods: {
-    play(num) {
-      let classArr = this.$refs['changeClass']
-      let playNum = classArr[num].className
-      
-      this.$emit('changeNum',num)
-      this.count = num
-      //提交状态
-        this.commitMenu();
-        this.barMenu = true;
-      if (/icon-bofang/.test(playNum)) {
+    play(id) {
+      if(this.commitTrue){
         this.commitData(this.musicList);
-        this.commitData(this.data);
-        this.commitConvert(this.originalData)
+        this.commitTrue = false;
       }
+      this.commitNum({ id });
     },
     handleScroll() {
       let sh = this.$refs["myScrollbar"].scrollHeight;
       let st = this.$refs["myScrollbar"].scrollTop;
       let ct = this.$refs["myScrollbar"].clientHeight;
-
       if (st >= sh - ct) {
         this.show = true;
 
@@ -72,86 +64,100 @@ export default {
           "scroll",
           this.handleScroll
         );
-        setTimeout(() => {
-          let data1 = this.originalData.playlist.tracks.slice(50, 100);
-          let resultList = filterData(data1);
-          resultList.forEach(item => {
-            this.musicList.push(item);
-          });
-          this.loadingText = "没有更多啦~";
-        }, 500);
+        // setTimeout(() => {
+        //   let data1 = this.originalData.playlist.tracks.slice(50, 100);
+        //   let resultList = filterData(data1);
+        //   resultList.forEach(item => {
+        //     this.musicList.push(item);
+        //   });
+        //   this.loadingText = "没有更多啦~";
+        // }, 500);
+      } else {
+        this.show = false;
       }
     },
-    menu(value){
+    menu(value) {
       //按钮状态切换
       let classArr = this.$refs.changeClass;
-      let listItem = this.$refs['list-item'];
-      let playNum  = classArr[value].className
+      let listItem = this.$refs["list-item"];
+      let playNum = classArr[value].className;
       if (/icon-bofang/.test(playNum)) {
-          listItem.forEach(item => {
-            item.classList.remove("on");
-          });
-          classArr.forEach(item => {
-            item.classList.replace("icon-zanting", "icon-bofang");
-          });
-          listItem[value].classList.add("on");
-          classArr[value].classList.replace("icon-bofang", "icon-zanting");
+        listItem.forEach(item => {
+          item.classList.remove("on");
+        });
+        classArr.forEach(item => {
+          item.classList.replace("icon-zanting", "icon-bofang");
+        });
+        listItem[value].classList.add("on");
+        classArr[value].classList.replace("icon-bofang", "icon-zanting");
       }
       if (/icon-zanting/.test(playNum)) {
         listItem[value].classList.remove("on");
         classArr[value].classList.replace("icon-zanting", "icon-bofang");
       }
     },
-    ...mapMutations(["commitData", "commitMenu","commitConvert"])
-  },
-  mounted() {},
-  activated(){
-    let ele = this.$refs["myScrollbar"];
-    ele.addEventListener("scroll", this.handleScroll);
-    if(this.count != ''){
-        this.menu(this.count)
+    menuClass(value) {
+      let classArr = this.$refs.changeClass;
+      let listItem = this.$refs["list-item"];
+      let playNum = classArr[value].className;
+      if (/icon-bofang/.test(playNum)) {
+        listItem[value].classList.add("on");
+        classArr[value].classList.replace("icon-bofang", "icon-zanting");
       }
+    },
+    deleteList() {
+      this.$emit("deleteList");
+      this.show = false;
+    },
+    ...mapMutations(["commitData", "commitNum"])
   },
-  deactivated(){
-    this.barMenu = false;
-    this.isTrue = false
-    this.loadingText = "加载更多...";
+  activated() {
+    this.timer = setTimeout(() => {
+      this.isTrue = true;
+    }, 500);
+  },
+
+  deactivated() {
+    this.isTrue = false;
+    clearTimeout(this.timer);
   },
   watch: {
-    originalData(now, old) {
-      let data1 = now.playlist.tracks.slice(0, 50);
-      //调用方法
-        this.musicList = filterData(data1)
-        setTimeout(()=>{
-          this.isTrue = true
-        },300)
-      let result = now.playlist.tracks.slice(0, 100);
-      let data = filterData(result);
-      data.forEach(item => {
-        let URL = `https://music.163.com/song/media/outer/url?id=${item.id}.mp3`;
-        item.url = URL;
+    playNum(now, old) {
+      //拿到vuex中的歌曲id值和当前页面歌曲数组musicList进行查找判断
+      //如果为true就进行按钮状态和音乐动图切换
+      const { id } = now;
+      let arrItem = this.musicList.find(item => {
+        return item.id == id;
       });
-      this.data = data
-      // this.commitData(data);
-    },
-    playMenu(now,old) {
-      if(this.count != ''){
-        this.menu(this.count)
+      if (arrItem) {
+        let num = this.musicList.indexOf(arrItem);
+        this.$nextTick(() => {
+          //异步获取改变
+          this.menu(num);
+        });
       }
     },
-    playNum(now,old){
+    musicList(now, old) {
       console.log(1)
-      if(this.barMenu){
-        
-          
+      this.commitTrue = true;
+      const { id } = this.playNum;
+      if (id) {
+        //拿到vuex中的歌曲id值和当前页面歌曲数组musicList进行查找判断
+        let arrItem = now.find(item => {
+          return item.id == id;
+        });
+        if (arrItem) {
+          let num = now.indexOf(arrItem);
+          this.$nextTick(() => {
+            //调用函数异步获取里面dom
+            this.menuClass(num);
+          });
+        }
       }
-      this.count = now
-          this.menu(now)
-    },
+    }
   },
   computed: {
-    ...mapGetters(["playMenu", "playNum"]),
-    
+    ...mapGetters(["playNum", "musicArr"])
   }
 };
 </script>
@@ -159,10 +165,30 @@ export default {
 <style lang="less" scoped>
 .publicMusicList {
   height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
   color: hsla(0, 0%, 100%, 0.6);
+  .list-title {
+    display: flex;
+    height: 50px;
+    text-align: left;
+    border-bottom: 1px solid hsla(0, 0%, 100%, 0.1);
+    line-height: 50px;
+    overflow: hidden;
+    .list-name {
+      flex: 1;
+      padding-left: 40px;
+      user-select: none;
+    }
+    // .list-artist {
+    //   text-indent: 20px;
+    // }
+    .list-time {
+      width: 60px;
+    }
+  }
   .list-content {
+    height: calc(100% - 50px);
+    overflow-x: hidden;
+    overflow-y: auto;
     .list-item {
       display: flex;
       width: 100%;
@@ -199,7 +225,7 @@ export default {
           box-sizing: border-box;
         }
         .hover {
-          font-size:35px;
+          font-size: 35px;
           &:hover {
             color: #fff;
             cursor: pointer;
@@ -234,6 +260,10 @@ export default {
     height: 40px;
     line-height: 40px;
     text-align: center;
+    span:hover {
+      color: #fff;
+      cursor: pointer;
+    }
   }
 }
 //滚动条
@@ -290,6 +320,11 @@ export default {
 }
 @media screen and (max-width: 1440px) {
   .publicMusicList {
+    .list-title {
+      .list-artist {
+        width: 200px;
+      }
+    }
     .list-content {
       .list-item {
         .list-artist {
@@ -301,6 +336,11 @@ export default {
 }
 @media screen and (max-width: 1200px) {
   .publicMusicList {
+    .list-title {
+      .list-artist {
+        width: 200px;
+      }
+    }
     .list-content {
       .list-item {
         .list-artist {
@@ -312,6 +352,11 @@ export default {
 }
 @media screen and (max-width: 768px) {
   .publicMusicList {
+    .list-title {
+      .list-artist {
+        width: 200px;
+      }
+    }
     .list-content {
       .list-item {
         .list-artist {
@@ -329,6 +374,11 @@ export default {
 }
 @media screen and (max-width: 640px) {
   .publicMusicList {
+    .list-title {
+      .list-artist {
+        width: 200px;
+      }
+    }
     .list-content {
       .list-item {
         .list-artist {

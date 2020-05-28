@@ -1,6 +1,5 @@
 <template>
-  <div class="wrap" v-loading="loading"
-    element-loading-background="rgba(0,0,0,0.2)">
+  <div class="wrap" v-loading="loading" element-loading-background="rgba(0,0,0,0.2)">
     <div class="topList" v-show="!loading">
       <div class="topList-heade">云音乐特色榜</div>
       <div class="topList-content">
@@ -53,7 +52,6 @@ export default {
       .then(() => {
         getRecommend()
           .then(res => {
-            // console.log(res.result);
             this.recommendData = res.result;
           })
           .then(() => {
@@ -68,7 +66,7 @@ export default {
 
 <style lang="less" scoped>
 .wrap {
-  height:100%;
+  height: 100%;
   .topList {
     position: relative;
     width: 100%;
@@ -106,7 +104,7 @@ export default {
           overflow: hidden;
           white-space: nowrap;
         }
-        @media (max-width: 1100px) {
+      @media (max-width: 1100px) {
           width: 80%;
         }
       }
