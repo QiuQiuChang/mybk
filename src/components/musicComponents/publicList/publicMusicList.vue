@@ -1,6 +1,6 @@
 <template>
   <div class="publicMusicList" v-show="isTrue">
-    <div class="list-title">
+    <div class="list-title" v-if="display1">
       <span class="list-name">歌曲</span>
       <span class="list-artist">歌手</span>
       <span class="list-time">时长</span>
@@ -24,6 +24,11 @@
         <span @click="deleteList">{{loadingText}}</span>
       </div>
     </div>
+    <div class="delete-mask" v-show="display">
+        <transition name="fade">
+            <p v-if="display">弄啥呢，啥都没有啦！！！</p>
+        </transition>
+    </div>
   </div>
 </template>
 
@@ -37,6 +42,8 @@ export default {
       show: false,
       isTrue: false,
       commitTrue:false,
+      display:false,
+      display1:true,
       timer: 0,
       loadingText: "清空列表"
     };
@@ -108,6 +115,8 @@ export default {
     deleteList() {
       this.$emit("deleteList");
       this.show = false;
+      this.display = true;
+      this.display1 = false;
     },
     ...mapMutations(["commitData", "commitNum"])
   },
@@ -138,7 +147,6 @@ export default {
       }
     },
     musicList(now, old) {
-      console.log(1)
       this.commitTrue = true;
       const { id } = this.playNum;
       if (id) {
@@ -154,6 +162,10 @@ export default {
           });
         }
       }
+    },
+    musicArr(){
+      this.display = false;
+      this.display1 = true;
     }
   },
   computed: {
@@ -164,6 +176,7 @@ export default {
 
 <style lang="less" scoped>
 .publicMusicList {
+  position:relative;
   height: 100%;
   color: hsla(0, 0%, 100%, 0.6);
   .list-title {
@@ -255,15 +268,37 @@ export default {
     .list-item:hover .list-menu {
       display: block;
     }
-  }
-  .loading {
-    height: 40px;
-    line-height: 40px;
-    text-align: center;
-    span:hover {
-      color: #fff;
-      cursor: pointer;
+    .loading {
+      height: 40px;
+      line-height: 40px;
+      text-align: center;
+      span:hover {
+        color: #fff;
+        cursor: pointer;
+      }
     }
+  }
+  .delete-mask{
+    display: flex;
+    position:absolute;
+    width:100%;
+    height:100%;
+    top:0;
+    left:0;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    // background-color: #000;
+  }
+  .fade-enter-active {
+    transition: all 0.5s ease-in;
+  }
+.fade-leave-active {
+    transition: all 0.5s ease-in;
+  }
+.fade-enter, .fade-leave-to {
+    transform: translateY(-200px);
+    opacity: 0;
   }
 }
 //滚动条

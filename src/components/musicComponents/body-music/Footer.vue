@@ -119,19 +119,28 @@ export default {
       clearInterval(this.timer);
     },
     menuControl() {//播放暂停
-      this.commitNum({ id: this.musicId });
+      let audio = this.$refs["setAduio"];
+      if(audio.src){//避免没有任何歌曲播放时点击按钮
+        this.commitNum({ id: this.musicId });
+      }
     },
     prve() {//上一首
       let value = this.musicArr.length - 1;
-      this.index = this.index == 0 ? value : this.index - 1;
-      let id = this.musicArr.slice(this.index, this.index + 1)[0].id;
-      this.commitNum({ id });
+      let audio = this.$refs["setAduio"];
+      if(audio.src){//避免没有任何歌曲播放时点击按钮
+        this.index = this.index == 0 ? value : this.index - 1;
+        let id = this.musicArr.slice(this.index, this.index + 1)[0].id;
+        this.commitNum({ id });
+      }
     },
     next() {//下一首
       let value = this.musicArr.length - 1;
-      this.index = this.index == value ? 0 : this.index + 1;
-      let id = this.musicArr.slice(this.index, this.index + 1)[0].id;
-      this.commitNum({ id });
+      let audio = this.$refs["setAduio"];
+      if(audio.src){//避免没有任何歌曲播放时点击按钮
+        this.index = this.index == value ? 0 : this.index + 1;
+        let id = this.musicArr.slice(this.index, this.index + 1)[0].id;
+        this.commitNum({ id });
+      }
     },
     ended() {
       this.percentage = 0;
@@ -140,7 +149,9 @@ export default {
     },
     percentChange(value) {
       let audio = this.$refs["setAduio"];
-      audio.currentTime = audio.duration * value;
+      if(audio.src){//避免没有任何歌曲播放时点击按钮
+        audio.currentTime = audio.duration * value;
+      }
     },
     changeVolume(percent) {
       let audio = this.$refs["setAduio"];
