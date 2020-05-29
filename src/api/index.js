@@ -35,9 +35,9 @@ export const getRecommend = () => {
 export const getSpecificRecommend = (id) => {
   return Axios.get('http://qiuchang.xyz:3000/playlist/detail?id=' + id)
 }
-//检查音乐是否可用
-export const checkMusic = (id) =>{
-  return Axios.get('http://qiuchang.xyz:3000//check/music?id=' + id)
+//歌曲热搜接口
+export const searchHot = () =>{
+  return Axios.get('http://qiuchang.xyz:3000/search/hot')
 }
 //注册api
 export const register = (obj) =>{

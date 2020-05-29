@@ -166,6 +166,9 @@ export default {
     musicArr(){
       this.display = false;
       this.display1 = true;
+    },
+    $route(to,from){
+        console.log(to)
     }
   },
   computed: {
@@ -186,6 +189,7 @@ export default {
     border-bottom: 1px solid hsla(0, 0%, 100%, 0.1);
     line-height: 50px;
     overflow: hidden;
+    color:#fff;
     .list-name {
       flex: 1;
       padding-left: 40px;
