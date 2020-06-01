@@ -377,7 +377,7 @@ export default {
   .publicMusicList {
     .list-title {
       .list-artist {
-        width: 200px;
+        width: 150px;
       }
     }
     .list-content {
@@ -393,7 +393,7 @@ export default {
   .publicMusicList {
     .list-title {
       .list-artist {
-        width: 200px;
+        width: 20%;
       }
     }
     .list-content {
@@ -415,8 +415,11 @@ export default {
   .publicMusicList {
     .list-title {
       .list-artist {
-        width: 200px;
+        width: 80px;
       }
+      .list-time {
+          display: none;
+        }
     }
     .list-content {
       .list-item {

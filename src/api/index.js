@@ -39,6 +39,10 @@ export const getSpecificRecommend = (id) => {
 export const searchHot = () =>{
   return Axios.get('http://qiuchang.xyz:3000/search/hot')
 }
+//搜索接口
+export const searchKeyWords = (key) =>{
+  return Axios.get('http://qiuchang.xyz:3000/search?keywords=' + key)
+}
 //注册api
 export const register = (obj) =>{
     return Axios.post('http://localhost:9875/register',qs.stringify(obj))
