@@ -81,10 +81,10 @@ export default {
   }
 }
 .fade-enter-active {
-  transition: all 0.8s ease-in;
+  transition: all 0.8s;
 }
 .fade-leave-active {
-  transition: all 0.8s ease-in;
+  transition: all 0.8s;
 }
 .fade-enter, .fade-leave-to
 /* .slide-fade-leave-active for below version 2.1.8 */ {

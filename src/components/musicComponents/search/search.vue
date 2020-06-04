@@ -22,7 +22,6 @@ export default {
       if(code == 200){
        let hotArr = result.hots.slice(0,5)
            this.hotArr = hotArr
-       console.log(hotArr)
       }
     })
   },
@@ -31,7 +30,27 @@ export default {
       let searchInput = this.$refs['search-input']
           searchInput.value = value
           searchKeyWords(value).then((res)=>{
-            console.log(res)
+            const { songs } = res.result
+            console.log(songs)
+            let arr = []
+            songs.forEach((item)=>{
+              let obj = {}
+              for(let key in item){
+                  if(key == 'album'){
+                      obj.al = item[key]
+                  }else if(key == 'artists'){
+                    obj.ar = item[key]
+                  }else if(key == 'duration'){
+                    obj.dt = item[key]
+                  }else if(key == 'id'){
+                    obj.id = item[key]
+                  }else if(key == 'name'){
+                    obj.name = item[key]
+                  }
+              }
+              arr.push(obj)
+            })
+            console.log(arr)
           })
     }
   }

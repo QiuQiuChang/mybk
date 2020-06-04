@@ -2,7 +2,7 @@
   <div class="home-wrap">
     <div class="section">
       <div class="photo">
-        <img src="http://localhost:9875/imgs/myself.jpg" alt title="Author:邱~" />
+        <img src="http://qiuchang.xyz:9875/imgs/myself.jpg" alt title="Author:邱~" />
       </div>
       <span>邱~</span>
       <div class="bg-content">

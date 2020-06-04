@@ -45,23 +45,23 @@ export const searchKeyWords = (key) =>{
 }
 //注册api
 export const register = (obj) =>{
-    return Axios.post('http://localhost:9875/register',qs.stringify(obj))
+    return Axios.post('http://qiuchang.xyz:9875/register',qs.stringify(obj))
 }
 //登录api
 export const login = (obj) =>{
-    return Axios.post('http://localhost:9875/login',qs.stringify(obj))
+    return Axios.post('http://qiuchang.xyz:9875/login',qs.stringify(obj))
 }
 //获取文章
 export const getArticle = () =>{
-   return Axios.get ('http://localhost:9875/article')
+   return Axios.get ('http://qiuchang.xyz:9875/article')
 }
 //获取文章信息
 export const getArticleInfo = (id) =>{
-  return Axios.get ('http://localhost:9875/articleInfo/' + id)
+  return Axios.get ('http://qiuchang.xyz:9875/articleInfo/' + id)
 }
 //获取个人信息
 export const profile = (token) =>{
-  return Axios.get('http://localhost:9875/profile',{
+  return Axios.get('http://qiuchang.xyz:9875/profile',{
     headers: {
       authorization: `Bearer ${token}`,
     }
@@ -69,5 +69,5 @@ export const profile = (token) =>{
 }
 //更新个人信息
 export const postProfile = (obj) =>{
-  return Axios.post ('http://localhost:9875/profile',qs.stringify(obj))
+  return Axios.post ('http://qiuchang.xyz:9875/profile',qs.stringify(obj))
 }

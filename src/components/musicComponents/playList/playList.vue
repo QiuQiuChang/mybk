@@ -22,6 +22,10 @@ export default {
     }
   },
   activated(){
+    const { id } = this.playNum
+     if (id) {
+       this.musicList = this.musicArr
+      }
     setTimeout(()=>{
         this.loading = false
         },200)
@@ -44,17 +48,14 @@ export default {
   
   deactivated(){
     this.loading = true
+    this.musicList = []
   },
   methods:{
     deleteList(){
       this.musicList = []
     }
   },
-  watch:{
-    musicArr(now,old){
-      this.musicList = now
-    }
-  },
+  watch:{},
   computed:{
     ...mapGetters(['playNum','musicArr'])
   }

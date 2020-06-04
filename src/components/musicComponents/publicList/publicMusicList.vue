@@ -54,11 +54,11 @@ export default {
   },
   methods: {
     play(id) {
+      this.commitNum({ id });
       if(this.commitTrue){
         this.commitData(this.musicList);
         this.commitTrue = false;
       }
-      this.commitNum({ id });
     },
     handleScroll() {
       let sh = this.$refs["myScrollbar"].scrollHeight;
@@ -123,12 +123,13 @@ export default {
   activated() {
     this.timer = setTimeout(() => {
       this.isTrue = true;
-    }, 500);
+    }, 800);
   },
 
   deactivated() {
     this.isTrue = false;
     clearTimeout(this.timer);
+    this.$emit('handelDelete')
   },
   watch: {
     playNum(now, old) {
@@ -138,12 +139,15 @@ export default {
       let arrItem = this.musicList.find(item => {
         return item.id == id;
       });
+      
       if (arrItem) {
         let num = this.musicList.indexOf(arrItem);
-        this.$nextTick(() => {
-          //异步获取改变
-          this.menu(num);
-        });
+        console.log(arrItem,Math.min(num))
+            this.$nextTick(() => {
+            //异步获取改变
+            this.menu(num);
+          });
+        
       }
     },
     musicList(now, old) {
@@ -156,6 +160,7 @@ export default {
         });
         if (arrItem) {
           let num = now.indexOf(arrItem);
+          console.log(arrItem,num)
           this.$nextTick(() => {
             //调用函数异步获取里面dom
             this.menuClass(num);
@@ -167,9 +172,6 @@ export default {
       this.display = false;
       this.display1 = true;
     },
-    $route(to,from){
-        console.log(to)
-    }
   },
   computed: {
     ...mapGetters(["playNum", "musicArr"])

@@ -1,7 +1,7 @@
 <template>
   <div class="detail" v-loading="loading"
     element-loading-background="rgba(0,0,0,0.2)">
-      <publicMusicList :musicList="musicList"></publicMusicList>
+      <publicMusicList :musicList="musicList" @handelDelete = 'handelDelete'></publicMusicList>
   </div>
 </template>
 
@@ -23,7 +23,13 @@ export default {
   activated(){
       const { id } = this.$route.params
       getSpecificRecommend(id).then((res)=>{
-            let result = res.playlist.tracks.slice(0, 100);
+            let tracks = res.playlist.tracks;
+            let result;
+            if(tracks.length > 10){
+                result = tracks.slice(0.100)
+            }else{
+              result = tracks
+            }
             let data = filterData(result);
             data.forEach(item => {
               let URL = `https://music.163.com/song/media/outer/url?id=${item.id}.mp3`;
@@ -33,14 +39,17 @@ export default {
       }).then(()=>{
         setTimeout(()=>{
           this.loading = false
-        },200)
+        },500)
       })
   },
   deactivated(){
     this.loading = true
+    this.musicList = []
   },
   methods:{
-   
+   handelDelete(){
+     this.musicList = []
+   }
   }
 }
 </script>

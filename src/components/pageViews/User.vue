@@ -3,7 +3,7 @@
     <div class="title">{{nickName}}</div>
     <el-upload
       class="avatar-uploader"
-      action="http://localhost:9875/picture"
+      action="http://qiuchang.xyz:9875/picture"
       :headers="headers" 
       :show-file-list="false"
       :on-success="handleAvatarSuccess"
@@ -67,7 +67,7 @@ export default {
     const token = Cookies.get("token");
     if (token) {
       profile(token).then(res => {
-        //console.log(res);
+        // console.log(res);
         this.userInfo = res
         this.str += res.name;
         this.imageUrl = res.pic
