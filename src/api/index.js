@@ -40,8 +40,12 @@ export const searchHot = () =>{
   return Axios.get('http://qiuchang.xyz:3000/search/hot')
 }
 //搜索接口
-export const searchKeyWords = (key) =>{
-  return Axios.get('http://qiuchang.xyz:3000/search?keywords=' + key)
+export const searchKeyWords = (key,count) =>{
+  return Axios.get(`http://qiuchang.xyz:3000/search?&offset=${count}&limit=30&keywords=${key}`)
+}
+//歌曲详情
+export const songDetails = (id) =>{
+  return Axios.get(`http://qiuchang.xyz:3000/song/detail?ids=${id}`)
 }
 //注册api
 export const register = (obj) =>{

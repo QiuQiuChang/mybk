@@ -19,8 +19,13 @@
             </div>
             <mmProgress :percent="percentage" @percentChange="percentChange"></mmProgress>
           </div>
-          <i class="iconfont icon-shunxubofangtubiao" :title="playModel" @click="changeModel" ref="playModel"></i>
-          <i class="iconfont icon-weibiaoti-"></i>
+          <i
+            class="iconfont icon-shunxubofangtubiao"
+            :title="playModel"
+            @click="changeModel"
+            ref="playModel"
+          ></i>
+          <i class="iconfont icon-weibiaoti-" @click="commentClick"></i>
           <div class="music-bar-volume" title="音量加减">
             <div class="volume">
               <i class="iconfont icon-yinliang" @click="changeMute" ref="iconVolume"></i>
@@ -38,6 +43,8 @@
 <script>
 import mmProgress from "../progress/mmProgress";
 import { mapState, mapGetters, mapMutations } from "vuex";
+import { songDetails } from "../../../api";
+import { EventBus } from "../../../eventBus/eventBus"
 export default {
   name: "footerWrap",
   components: {
@@ -46,10 +53,10 @@ export default {
   data() {
     return {
       musicName: "", //存歌曲名
-      picUrl: "",
       fullTime: "", //转化后的歌曲总时间
       duration: "", //总时间
       musicArtist: "", //歌手
+      pic:'',
       nowTime: "00:00", //转化后当前时间
       percentage: 0, //比率
       volume: 0, //音频播放时的音量
@@ -57,8 +64,8 @@ export default {
       timer: 0, //定时器
       timer1: 0,
       index: "", //存放播放的歌曲下标值
-      musicId: "" ,//歌曲id用于暂停按钮的提交
-      playModel:'顺序播放',
+      musicId: "", //歌曲id用于暂停按钮的提交
+      playModel: "顺序播放"
       // {'顺序播放':order,'随机播放':random,'列表循环':cycle,'单曲循环':singleCycle}
     };
   },
@@ -118,25 +125,32 @@ export default {
       audio.pause();
       clearInterval(this.timer);
     },
-    menuControl() {//播放暂停
+    menuControl() {
+      //播放暂停
       let audio = this.$refs["setAduio"];
-      if(audio.src){//避免没有任何歌曲播放时点击按钮
+      if (audio.src) {
+        //避免没有任何歌曲播放时点击按钮
         this.commitNum({ id: this.musicId });
+        this.commitMenu(!this.playMenu)
       }
     },
-    prve() {//上一首
+    prve() {
+      //上一首
       let value = this.musicArr.length - 1;
       let audio = this.$refs["setAduio"];
-      if(audio.src){//避免没有任何歌曲播放时点击按钮
+      if (audio.src) {
+        //避免没有任何歌曲播放时点击按钮
         this.index = this.index == 0 ? value : this.index - 1;
         let id = this.musicArr.slice(this.index, this.index + 1)[0].id;
         this.commitNum({ id });
       }
     },
-    next() {//下一首
+    next() {
+      //下一首
       let value = this.musicArr.length - 1;
       let audio = this.$refs["setAduio"];
-      if(audio.src){//避免没有任何歌曲播放时点击按钮
+      if (audio.src) {
+        //避免没有任何歌曲播放时点击按钮
         this.index = this.index == value ? 0 : this.index + 1;
         let id = this.musicArr.slice(this.index, this.index + 1)[0].id;
         this.commitNum({ id });
@@ -149,7 +163,8 @@ export default {
     },
     percentChange(value) {
       let audio = this.$refs["setAduio"];
-      if(audio.src){//避免没有任何歌曲播放时点击按钮
+      if (audio.src) {
+        //避免没有任何歌曲播放时点击按钮
         audio.currentTime = audio.duration * value;
       }
     },
@@ -183,10 +198,23 @@ export default {
         this.volume = this.volume1;
       }
     },
-    workingData(value) {//vuex中取出数据解析函数
+    workingData(value, id) {
+      //vuex中取出数据解析函数
       this.musicName = this.musicArr[value].name;
       this.musicArtist = this.musicArr[value].ar;
-      this.picUrl = this.musicArr[value].al.picUrl;
+      let pic = this.musicArr[value].al.picUrl;
+      if (pic) {
+        this.pic = pic
+        this.$emit("changePic", pic);
+      } else {
+        songDetails(id).then(res => {
+          const { songs } = res;
+          let bgPic = songs[0].al.picUrl;
+              this.pic = bgPic
+              this.$emit("changePic", bgPic);
+          // console.log(songs[0].al.picUrl);
+        });
+      }
       let time = this.musicArr[value].dt;
       let m =
         parseInt(Math.floor(time / 1000) / 60) < 10
@@ -198,12 +226,16 @@ export default {
           : Math.floor(time / 1000) % 60;
       let str = m + ":" + s;
       this.fullTime = str;
+      
     },
-    changeModel(){
-      let playModel = this.$refs['playModel']
-      console.log(playModel.className)
+    changeModel() {
+      // let playModel = this.$refs["playModel"];
+      this.$mmToast('播放模式功能维护上线当中！！！')
     },
-    ...mapMutations(["commitNum"])
+    commentClick(){
+      this.$mmToast('查看评论功能维护上线当中！！！')
+    },
+    ...mapMutations(["commitNum","commitMenu"])
   },
   watch: {
     playNum(now, old) {
@@ -215,17 +247,17 @@ export default {
         });
         let num = this.musicArr.indexOf(arrItem);
         this.index = num;
-        this.workingData(num);
+        this.workingData(num, id);
+        EventBus.$emit('changePic',{name:this.musicName,ar:this.musicArtist,pic:this.pic})
         audio.src = this.musicArr[num].url;
         this.percentage = 0;
         this.musicId = id;
-        this.$emit("changePic", this.picUrl);
       }
       audio.paused ? this.play() : this.pause();
     }
   },
   computed: {
-    ...mapGetters(["musicArr", "playNum"])
+    ...mapGetters(["musicArr", "playNum","playMenu"])
   }
 };
 </script>

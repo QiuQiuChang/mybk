@@ -1,12 +1,13 @@
 <template>
-  <div class="publicMusicList" v-show="isTrue">
+  <div class="publicMusicList">
     <div class="list-title" v-if="display1">
       <span class="list-name">歌曲</span>
       <span class="list-artist">歌手</span>
-      <span class="list-time">时长</span>
+      <span class="list-time" v-if="isDisplay">时长</span>
+      <span class="list-album" v-else>专辑</span>
     </div>
     <div class="list-content" ref="myScrollbar">
-      <div v-for="(item,index) in musicList" :key="item.id" class="list-item" ref="list-item">
+      <div v-for="(item,index) in musicList1" :key="index" class="list-item" ref="list-item">
         <span class="list-num">{{index+1}}</span>
         <div class="list-name">
           <span>{{item.name}}</span>
@@ -15,49 +16,105 @@
           </div>
         </div>
         <span class="list-artist">{{item.ar}}</span>
-        <span class="list-time">
+        <span class="list-time" v-if="isDisplay">
           {{'0' + parseInt(Math.floor(item.dt/1000)/60)+':'+(Math.floor(item.dt/1000)%60>=10?Math.floor(item.dt/1000)%60:'0'+Math.floor(item.dt/1000)%60)}}
           <i></i>
         </span>
+        <span class="list-album" v-else>{{item.al.name}}</span>
       </div>
       <div class="loading" v-show="show">
         <span @click="deleteList">{{loadingText}}</span>
       </div>
     </div>
     <div class="delete-mask" v-show="display">
-        <transition name="fade">
-            <p v-if="display">弄啥呢，啥都没有啦！！！</p>
-        </transition>
+      <transition name="fade">
+        <p v-if="display">弄啥呢，啥都没有啦！！！</p>
+      </transition>
     </div>
   </div>
 </template>
 
 <script>
 import { mapMutations, mapGetters } from "vuex";
+import { searchKeyWords, getData } from "../../../api";
+import { workingData, filterData } from "../../../utils/util";
 export default {
   name: "publicMusicList",
-  props: ["musicList"],
+  props: ["musicList", "value"],
   data() {
     return {
+      musicList1: [],
       show: false,
       isTrue: false,
-      commitTrue:false,
-      display:false,
-      display1:true,
+      commitTrue: false,
+      display: false,
+      display1: true,
+      isDisplay: true,
       timer: 0,
+      count: 0,
       loadingText: "清空列表"
     };
   },
   mounted() {
     let ele = this.$refs["myScrollbar"];
     ele.addEventListener("scroll", this.handleScroll);
+    let path = this.$route.path;
+    if (path == "/music/search") {
+      this.isDisplay = false;
+    } else {
+      this.isDisplay = true;
+    }
   },
   methods: {
     play(id) {
       this.commitNum({ id });
-      if(this.commitTrue){
-        this.commitData(this.musicList);
-        this.commitTrue = false;
+      const key = this.playNum.id;
+      let arrItem = this.musicList.find(item => {
+        return item.id == key;
+      });
+      let num = this.musicList.indexOf(arrItem);
+      let classArr = this.$refs.changeClass;
+      let playNum = classArr[num].className;
+      if (/icon-bofang/.test(playNum)){
+        this.commitMenu(true)
+      }
+      if(/icon-zanting/.test(playNum)){
+        this.commitMenu(false)
+      }
+      let path = this.$route.path;
+      if (path == "/music/search") {
+        const { id } = this.playNum;
+        this.id = id;
+        if (this.musicArr.length == 0) {
+          let arrItem = this.musicList.filter(item => {
+            return item.id == id;
+          });
+          this.commitData(arrItem);
+          getData().then(res => {
+            let result = res.playlist.tracks.slice(0, 100);
+            let data = filterData(result);
+            data.forEach(item => {
+              let URL = `https://music.163.com/song/media/outer/url?id=${item.id}.mp3`;
+              item.url = URL;
+            });
+            this.commitConcat(data);
+          });
+        } else {
+          let arrItem = this.musicList.find(item => {
+            return item.id == id;
+          });
+          let num = this.musicList.indexOf(arrItem);
+          let classArr = this.$refs.changeClass;
+          let playNum = classArr[num].className;
+          if (/icon-bofang/.test(playNum)) {
+            this.commitUnshift(arrItem);
+          }
+        }
+      } else {
+        if (this.commitTrue) {
+          this.commitData(this.musicList);
+          this.commitTrue = false;
+        }
       }
     },
     handleScroll() {
@@ -65,20 +122,34 @@ export default {
       let st = this.$refs["myScrollbar"].scrollTop;
       let ct = this.$refs["myScrollbar"].clientHeight;
       if (st >= sh - ct) {
+        let path = this.$route.path;
+        if (path == "/music/search") {
+          if (this.musicList1.length == 30) {
+            this.count = 0;
+          }
+          if (this.musicList1.length !== this.count + 30) {
+            this.$mmToast("没有更多啦！");
+            return;
+          }
+
+          this.count += 30;
+          // console.log(this.count);
+          searchKeyWords(this.value, this.count).then(res => {
+            const { songs } = res.result;
+            let resultData = workingData(songs);
+            // console.log(resultData);
+            resultData.forEach(item => {
+              this.musicList1.push(item);
+            });
+          });
+          return;
+        }
         this.show = true;
 
         this.$refs["myScrollbar"].removeEventListener(
           "scroll",
           this.handleScroll
         );
-        // setTimeout(() => {
-        //   let data1 = this.originalData.playlist.tracks.slice(50, 100);
-        //   let resultList = filterData(data1);
-        //   resultList.forEach(item => {
-        //     this.musicList.push(item);
-        //   });
-        //   this.loadingText = "没有更多啦~";
-        // }, 500);
       } else {
         this.show = false;
       }
@@ -118,18 +189,24 @@ export default {
       this.display = true;
       this.display1 = false;
     },
-    ...mapMutations(["commitData", "commitNum"])
+    ...mapMutations([
+      "commitData",
+      "commitNum",
+      "commitConcat",
+      "commitUnshift",
+      "commitMenu"
+    ])
   },
   activated() {
     this.timer = setTimeout(() => {
       this.isTrue = true;
-    }, 800);
+    }, 200);
   },
 
   deactivated() {
     this.isTrue = false;
     clearTimeout(this.timer);
-    this.$emit('handelDelete')
+    this.$emit("handelDelete");
   },
   watch: {
     playNum(now, old) {
@@ -139,18 +216,18 @@ export default {
       let arrItem = this.musicList.find(item => {
         return item.id == id;
       });
-      
+
       if (arrItem) {
         let num = this.musicList.indexOf(arrItem);
-        console.log(arrItem,Math.min(num))
-            this.$nextTick(() => {
-            //异步获取改变
-            this.menu(num);
-          });
-        
+        // console.log(arrItem, Math.min(num));
+        this.$nextTick(() => {
+          //异步获取改变
+          this.menu(num);
+        });
       }
     },
     musicList(now, old) {
+      this.musicList1 = now;
       this.commitTrue = true;
       const { id } = this.playNum;
       if (id) {
@@ -160,28 +237,43 @@ export default {
         });
         if (arrItem) {
           let num = now.indexOf(arrItem);
-          console.log(arrItem,num)
           this.$nextTick(() => {
             //调用函数异步获取里面dom
-            this.menuClass(num);
+            if(this.playMenu){
+              this.menuClass(num);
+            }
           });
+        }else{
+          this.$nextTick(()=>{
+            let classArr = this.$refs.changeClass;
+            let listItem = this.$refs["list-item"];
+            classArr.forEach(item => {
+              item.classList.replace("icon-zanting", "icon-bofang");
+            });
+            listItem.forEach(item => {
+              item.classList.remove("on");
+            });
+          })
         }
       }
     },
-    musicArr(){
+    musicArr() {
       this.display = false;
       this.display1 = true;
     },
+    value() {
+      this.count = 0;
+    }
   },
   computed: {
-    ...mapGetters(["playNum", "musicArr"])
+    ...mapGetters(["playNum", "musicArr","playMenu"])
   }
 };
 </script>
 
 <style lang="less" scoped>
 .publicMusicList {
-  position:relative;
+  position: relative;
   height: 100%;
   color: hsla(0, 0%, 100%, 0.6);
   .list-title {
@@ -191,17 +283,20 @@ export default {
     border-bottom: 1px solid hsla(0, 0%, 100%, 0.1);
     line-height: 50px;
     overflow: hidden;
-    color:#fff;
+    color: #fff;
     .list-name {
       flex: 1;
       padding-left: 40px;
       user-select: none;
     }
-    // .list-artist {
-    //   text-indent: 20px;
-    // }
+    .list-artist {
+      width: 300px;
+    }
     .list-time {
       width: 60px;
+    }
+    .list-album {
+      width: 300px;
     }
   }
   .list-content {
@@ -251,7 +346,8 @@ export default {
           }
         }
       }
-      .list-artist {
+      .list-artist,
+      .list-album {
         display: block;
         width: 300px;
         text-overflow: ellipsis;
@@ -284,13 +380,13 @@ export default {
       }
     }
   }
-  .delete-mask{
+  .delete-mask {
     display: flex;
-    position:absolute;
-    width:100%;
-    height:100%;
-    top:0;
-    left:0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
     justify-content: center;
     align-items: center;
     overflow: hidden;
@@ -299,10 +395,11 @@ export default {
   .fade-enter-active {
     transition: all 0.5s ease-in;
   }
-.fade-leave-active {
+  .fade-leave-active {
     transition: all 0.5s ease-in;
   }
-.fade-enter, .fade-leave-to {
+  .fade-enter,
+  .fade-leave-to {
     transform: translateY(-200px);
     opacity: 0;
   }
@@ -362,13 +459,15 @@ export default {
 @media screen and (max-width: 1440px) {
   .publicMusicList {
     .list-title {
-      .list-artist {
+      .list-artist,
+      .list-album {
         width: 200px;
       }
     }
     .list-content {
       .list-item {
-        .list-artist {
+        .list-artist,
+        .list-album {
           width: 200px;
         }
       }
@@ -378,13 +477,15 @@ export default {
 @media screen and (max-width: 1200px) {
   .publicMusicList {
     .list-title {
-      .list-artist {
+      .list-artist,
+      .list-album {
         width: 150px;
       }
     }
     .list-content {
       .list-item {
-        .list-artist {
+        .list-artist,
+        .list-album {
           width: 150px;
         }
       }
@@ -394,13 +495,15 @@ export default {
 @media screen and (max-width: 768px) {
   .publicMusicList {
     .list-title {
-      .list-artist {
+      .list-artist,
+      .list-album {
         width: 20%;
       }
     }
     .list-content {
       .list-item {
-        .list-artist {
+        .list-artist,
+        .list-album {
           width: 20%;
         }
         .list-name {
@@ -419,16 +522,18 @@ export default {
       .list-artist {
         width: 80px;
       }
-      .list-time {
-          display: none;
-        }
+      .list-time,
+      .list-album {
+        display: none;
+      }
     }
     .list-content {
       .list-item {
         .list-artist {
           width: 80px;
         }
-        .list-time {
+        .list-time,
+        .list-album {
           display: none;
         }
       }

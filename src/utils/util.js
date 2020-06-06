@@ -31,5 +31,32 @@ export const filterData = (data) =>{
     });
     return musicList1;
     }
+export const workingData = (data) =>{
+    let arr = []
+    data.forEach((item)=>{
+      let obj = {}
+      for(let key in item){
+          if(key == 'album'){
+              obj.al = item[key]
+          }else if(key == 'artists'){
+            if(item[key].length>=2){
+                obj.ar = item[key][0].name + '/' + item[key][1].name
+            }else{
+                obj.ar = item[key][0].name
+            }
+          }else if(key == 'duration'){
+            obj.dt = item[key]
+          }else if(key == 'id'){
+            obj.id = item[key]
+          }else if(key == 'name'){
+            obj.name = item[key]
+          }
+      }
+      let URL = `https://music.163.com/song/media/outer/url?id=${item.id}.mp3`;
+          obj.url = URL
+          arr.push(obj)
+    })
+    return arr
+}
   
 

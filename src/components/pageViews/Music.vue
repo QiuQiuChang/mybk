@@ -29,7 +29,7 @@ export default {
   mounted() {
     let bgPlayer = document.getElementsByClassName("bg-player")[0];
     bgPlayer.style.backgroundImage =
-      'url("http://cdn.mtnhao.com/music/bg.jpg")';
+      'url("http://qiuchang.xyz:9875/imgs/bg.jpg")';
   },
   methods: {
     changePic(value) {
