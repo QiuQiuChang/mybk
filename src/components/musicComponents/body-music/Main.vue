@@ -45,15 +45,15 @@ export default {
     };
   },
   created(){
-    
-  },
-  mounted(){
-    EventBus.$on('changePic',(msg)=>{
+     EventBus.$on('changePic',(msg)=>{
       this.ar = msg.ar
       this.name = msg.name
       this.pic = msg.pic
       this.display = true
      })
+  },
+  mounted(){
+   
   },
   methods:{},
   watch: {}

@@ -1,6 +1,6 @@
 <template>
   <div class="myList">
-    <p>功能上线当中，敬请期待！！！</p>
+    <p>该功能需要登录网易云ID正在努力上线当中，敬请期待！！！</p>
   </div>
 </template>
 

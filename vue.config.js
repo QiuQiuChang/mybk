@@ -1,5 +1,6 @@
 // vue.config.js
 module.exports = {
+    publicPath: './',
     devServer: {
         open: true, //是否自动弹出浏览器页面
         host: "localhost", 
@@ -16,6 +17,7 @@ module.exports = {
         //     }
         //   }
         // },
-      },
-     
+    },
+   
+    
 }

@@ -25,7 +25,7 @@ export default {
     const { id } = this.playNum;
     if (id) {
       this.musicList = this.musicArr;
-    } else {
+    }else {
       this.musicList = this.musicList1;
     }
     setTimeout(() => {

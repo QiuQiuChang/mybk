@@ -159,16 +159,12 @@ export default {
       overflow: hidden;
       // background-color: #000;
     }
-    .fade-enter-active {
-      transition: all 0.5s ease-in;
-    }
-    .fade-leave-active {
-      transition: all 0.5s ease-in;
-    }
-    .fade-enter,
-    .fade-leave-to {
+    .fade-enter{
       transform: translateY(-200px);
       opacity: 0;
+    }
+    .fade-enter-active {
+      transition: all 0.5s ease-in;
     }
   }
   @media screen and (max-width: 640px) {

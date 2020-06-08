@@ -8,8 +8,6 @@ import fastClick from 'fastclick'
 import mmToast from './components/Toast'
 //引入全局样式重置
 import './assets/style/reset.css'
-//引入图标
-import './assets/font_class/iconfont.css'
 //引入element-ui样式
 import 'element-ui/lib/theme-chalk/index.css';
 //引入隐藏类样式
@@ -17,6 +15,8 @@ import 'element-ui/lib/theme-chalk/display.css';
 //引入过渡动画样式
 import CollapseTransition from 'element-ui/lib/transitions/collapse-transition';
 Vue.component(CollapseTransition.name, CollapseTransition)
+//引入图标
+import './assets/font_class/iconfont.css'
 //引入懒加载
 import VueLazyload from 'vue-lazyload'
 //按需引入组件

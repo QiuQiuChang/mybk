@@ -16,10 +16,10 @@
           </div>
         </div>
         <span class="list-artist">{{item.ar}}</span>
-        <span class="list-time" v-if="isDisplay">
-          {{'0' + parseInt(Math.floor(item.dt/1000)/60)+':'+(Math.floor(item.dt/1000)%60>=10?Math.floor(item.dt/1000)%60:'0'+Math.floor(item.dt/1000)%60)}}
-          <i></i>
-        </span>
+        <span
+          class="list-time"
+          v-if="isDisplay"
+        >{{'0' + parseInt(Math.floor(item.dt/1000)/60)+':'+(Math.floor(item.dt/1000)%60>=10?Math.floor(item.dt/1000)%60:'0'+Math.floor(item.dt/1000)%60)}}</span>
         <span class="list-album" v-else>{{item.al.name}}</span>
       </div>
       <div class="loading" v-show="show">
@@ -55,6 +55,7 @@ export default {
       loadingText: "清空列表"
     };
   },
+  created() {},
   mounted() {
     let ele = this.$refs["myScrollbar"];
     ele.addEventListener("scroll", this.handleScroll);
@@ -75,22 +76,27 @@ export default {
       let num = this.musicList.indexOf(arrItem);
       let classArr = this.$refs.changeClass;
       let playNum = classArr[num].className;
-      if (/icon-bofang/.test(playNum)){
-        this.commitMenu(true)
+      if (/icon-bofang/.test(playNum)) {
+        //提交播放状态结合watch里面musicList当切换页面时达到状态一致
+        this.commitMenu(true);
       }
-      if(/icon-zanting/.test(playNum)){
-        this.commitMenu(false)
+      if (/icon-zanting/.test(playNum)) {
+        this.commitMenu(false);
       }
       let path = this.$route.path;
       if (path == "/music/search") {
+        //处理搜索页面点击播放添加到正在播放的最前面
         const { id } = this.playNum;
-        this.id = id;
+        // this.id = id;
+        console.log(id);
         if (this.musicArr.length == 0) {
+          //处理当什么都还没播放时直接搜索页面播放时请求正在播放数据然后添加处理
           let arrItem = this.musicList.filter(item => {
             return item.id == id;
           });
           this.commitData(arrItem);
           getData().then(res => {
+            //处理当什么都还没播放时直接搜索页面播放时请求正在播放数据然后添加处理
             let result = res.playlist.tracks.slice(0, 100);
             let data = filterData(result);
             data.forEach(item => {
@@ -100,6 +106,7 @@ export default {
             this.commitConcat(data);
           });
         } else {
+          //当之前有播放列表时再搜索播放时只有点击播放才会把当前一首歌曲添加到播放列表最前面
           let arrItem = this.musicList.find(item => {
             return item.id == id;
           });
@@ -110,7 +117,51 @@ export default {
             this.commitUnshift(arrItem);
           }
         }
+      } else if (path == "/music/historylist") {
+        //当页面在播放历史里面时另种情况处理
+        const { id } = this.playNum;
+        if (this.musicArr.length == 0) {
+          //vuex没有任何播放列表直接播放历史里面歌曲时
+          let arrItem1 = this.musicList.find(item => {
+            return item.id == id;
+          });
+          this.commitUnshift(arrItem1);
+          getData().then(res => {
+            //处理当什么都还没播放时直接搜索页面播放时请求正在播放数据然后添加处理
+            let result = res.playlist.tracks.slice(0, 100);
+            let data = filterData(result);
+            data.forEach(item => {
+              let URL = `https://music.163.com/song/media/outer/url?id=${item.id}.mp3`;
+              item.url = URL;
+            });
+            let arrItem2 = data.find(item =>{
+               return item.name == arrItem1.name;
+            })
+            let key = data.indexOf(arrItem2)
+            if(key){
+              data.splice(key,1)
+            }
+            this.commitConcat(data);
+          });
+        } else {
+          //vuex有播放列表再进入播放历史时播放处理
+          let arrItem = this.musicArr.find(item => {
+            return item.id == id;
+          });
+          if (!arrItem) {
+            let arrItem1 = this.musicList.find(item => {
+              return item.id == id;
+            });
+            let num = this.musicList.indexOf(arrItem1);
+            let classArr = this.$refs.changeClass;
+            let playNum = classArr[num].className;
+            if (/icon-bofang/.test(playNum)) {
+              this.commitUnshift(arrItem1);
+            }
+          }
+        }
       } else {
+        //不是搜索页面时点击播放提交数据
         if (this.commitTrue) {
           this.commitData(this.musicList);
           this.commitTrue = false;
@@ -131,19 +182,19 @@ export default {
             this.$mmToast("没有更多啦！");
             return;
           }
-
           this.count += 30;
-          // console.log(this.count);
           searchKeyWords(this.value, this.count).then(res => {
             const { songs } = res.result;
             let resultData = workingData(songs);
-            // console.log(resultData);
             resultData.forEach(item => {
               this.musicList1.push(item);
             });
           });
           return;
         }
+        // if (path == "/music/historylist"){
+        //   return
+        // }
         this.show = true;
 
         this.$refs["myScrollbar"].removeEventListener(
@@ -184,10 +235,18 @@ export default {
       }
     },
     deleteList() {
-      this.$emit("deleteList");
-      this.show = false;
-      this.display = true;
-      this.display1 = false;
+      //清空播放列表
+      let path = this.$route.path;
+      if (path == "/music/historylist") {
+        //当为播放历史页面时
+        this.$emit("deleteList");
+      } else {
+        //当为正在播放页面时
+        this.$emit("deleteList");
+        this.show = false;
+        this.display = true;
+        this.display1 = false;
+      }
     },
     ...mapMutations([
       "commitData",
@@ -198,6 +257,11 @@ export default {
     ])
   },
   activated() {
+    let path = this.$route.path;
+    let arrSongs = JSON.parse(window.localStorage.getItem("songsList"));
+    if (path == "/music/historylist" && arrSongs) {
+      this.show = true;
+    }
     this.timer = setTimeout(() => {
       this.isTrue = true;
     }, 200);
@@ -205,8 +269,16 @@ export default {
 
   deactivated() {
     this.isTrue = false;
+    this.display = false;
     clearTimeout(this.timer);
     this.$emit("handelDelete");
+  },
+  destroyed() {
+    //解决主体路由突然切换销毁再进入时播放状态混乱
+    //再次进入时重新选择播放
+    this.commitMenu(false);
+    this.commitNum({});
+    this.commitData([]);
   },
   watch: {
     playNum(now, old) {
@@ -216,14 +288,23 @@ export default {
       let arrItem = this.musicList.find(item => {
         return item.id == id;
       });
-
       if (arrItem) {
         let num = this.musicList.indexOf(arrItem);
         // console.log(arrItem, Math.min(num));
-        this.$nextTick(() => {
-          //异步获取改变
+        this.$nextTick(() => {//异步获取改变
           this.menu(num);
         });
+      }else{
+        this.$nextTick(() => {
+            let classArr = this.$refs.changeClass;
+            let listItem = this.$refs["list-item"];
+            classArr.forEach(item => {
+              item.classList.replace("icon-zanting", "icon-bofang");
+            });
+            listItem.forEach(item => {
+              item.classList.remove("on");
+            });
+          });
       }
     },
     musicList(now, old) {
@@ -239,12 +320,13 @@ export default {
           let num = now.indexOf(arrItem);
           this.$nextTick(() => {
             //调用函数异步获取里面dom
-            if(this.playMenu){
+            if (this.playMenu) {
               this.menuClass(num);
             }
           });
-        }else{
-          this.$nextTick(()=>{
+        } else {
+          //解决搜索不同时播放状态混淆
+          this.$nextTick(() => {
             let classArr = this.$refs.changeClass;
             let listItem = this.$refs["list-item"];
             classArr.forEach(item => {
@@ -253,7 +335,7 @@ export default {
             listItem.forEach(item => {
               item.classList.remove("on");
             });
-          })
+          });
         }
       }
     },
@@ -266,7 +348,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["playNum", "musicArr","playMenu"])
+    ...mapGetters(["playNum", "musicArr", "playMenu"])
   }
 };
 </script>
