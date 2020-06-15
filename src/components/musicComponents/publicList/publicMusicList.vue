@@ -192,11 +192,9 @@ export default {
           });
           return;
         }
-        // if (path == "/music/historylist"){
-        //   return
-        // }
-        this.show = true;
-
+        if (path == "/music/playList" || path == "/music/historylist"){
+          this.show = true;
+        }
         this.$refs["myScrollbar"].removeEventListener(
           "scroll",
           this.handleScroll
